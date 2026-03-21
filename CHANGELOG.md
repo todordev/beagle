@@ -4,6 +4,14 @@ All notable changes to Beagle are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] - 2026-03-21
+
+### Fixed
+- **beagle-core:** Preserve substantive details blocks in `fetch-pr-feedback` command ([#72](https://github.com/existential-birds/beagle/pull/72))
+
+### Changed
+- Update beagle-ios skill count in README (12 → 15) ([#71](https://github.com/existential-birds/beagle/pull/71))
+
 ## [2.7.0] - 2026-03-21
 
 ### Added
@@ -282,6 +290,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 [2.1.0]: https://github.com/existential-birds/beagle/compare/v2.0.3...v2.1.0
 [2.0.3]: https://github.com/existential-birds/beagle/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/existential-birds/beagle/compare/v2.0.1...v2.0.2
+[2.7.1]: https://github.com/existential-birds/beagle/compare/v2.7.0...v2.7.1
 [2.0.1]: https://github.com/existential-birds/beagle/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/existential-birds/beagle/compare/v1.14.0...v2.0.0
 [1.14.0]: https://github.com/existential-birds/beagle/compare/v1.13.1...v1.14.0
