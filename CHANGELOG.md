@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [2.10.1] - 2026-04-04
+
+### Fixed
+- **beagle-core:** Allow `receive-feedback` skill to be invoked by other skills ([#81](https://github.com/existential-birds/beagle/pull/81))
+
 ## [2.10.0] - 2026-04-03
 
 ### Added
@@ -308,6 +313,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - Development commands: `skill-builder`, `ensure-docs`
 - Cursor IDE command equivalents
 
+[2.10.1]: https://github.com/existential-birds/beagle/compare/v2.10.0...v2.10.1
+[2.10.0]: https://github.com/existential-birds/beagle/compare/v2.9.0...v2.10.0
 [2.9.0]: https://github.com/existential-birds/beagle/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/existential-birds/beagle/compare/v2.7.1...v2.8.0
 [2.7.0]: https://github.com/existential-birds/beagle/compare/v2.6.0...v2.7.0
