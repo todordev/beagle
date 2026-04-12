@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-04-11
+
+### Removed
+- **beagle-analysis:** Remove deprecated `12-factor-apps` and `12-factor-apps-analysis` skills, superseded by `agent-architecture-analysis` ([#90](https://github.com/existential-birds/beagle/pull/90))
+
+### Changed
+- **BREAKING:** Rename `brainstorm` skill to `brainstorm-beagle` to resolve ClawHub slug conflict ([#90](https://github.com/existential-birds/beagle/pull/90))
+- **BREAKING:** Rename `humanize` skill to `humanize-beagle` to resolve ClawHub slug conflict ([#90](https://github.com/existential-birds/beagle/pull/90))
+- **beagle-analysis:** Optimize skill descriptions for improved triggering accuracy ([#90](https://github.com/existential-birds/beagle/pull/90))
+
+### Fixed
+- **beagle-analysis:** Remove stale reference to deleted `12-factor-apps` skill in `agent-architecture-analysis` description ([#90](https://github.com/existential-birds/beagle/pull/90))
+
 ## [2.12.1] - 2026-04-10
 
 ### Changed
@@ -335,7 +348,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - Development commands: `skill-builder`, `ensure-docs`
 - Cursor IDE command equivalents
 
-[Unreleased]: https://github.com/existential-birds/beagle/compare/v2.12.1...HEAD
+[Unreleased]: https://github.com/existential-birds/beagle/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/existential-birds/beagle/compare/v2.12.1...v3.0.0
 [2.12.1]: https://github.com/existential-birds/beagle/compare/v2.12.0...v2.12.1
 [2.12.0]: https://github.com/existential-birds/beagle/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/existential-birds/beagle/compare/v2.10.1...v2.11.0
