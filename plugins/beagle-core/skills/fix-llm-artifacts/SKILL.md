@@ -1,12 +1,12 @@
 ---
 name: fix-llm-artifacts
-description: Applies fixes from a prior review-llm-artifacts run, with safe/risky classification
+description: Applies fixes from a prior review-llm-artifacts run, with safe/risky classification. Respects verify-llm-artifacts output when present to skip false positives.
 disable-model-invocation: true
 ---
 
 # Fix LLM Artifacts
 
-Apply fixes from a previous `review-llm-artifacts` run with automatic safe/risky classification.
+Apply fixes from a previous `review-llm-artifacts` run with automatic safe/risky classification. If `.beagle/llm-artifacts-verification.json` exists, **skip** findings marked `false_positive` and treat `inconclusive` like risky fixes (prompt or skip per user).
 
 ## Usage
 
@@ -16,10 +16,22 @@ Apply fixes from a previous `review-llm-artifacts` run with automatic safe/risky
 
 **Flags:**
 - `--dry-run` - Show what would be fixed without changing files
-- `--all` - Fix entire codebase (runs review with --all first)
+- `--all` - Fix entire codebase (runs `review-llm-artifacts --all` first if no review JSON)
 - `--category <name>` - Only fix specific category: `tests|dead-code|abstraction|style`
 
 ## Instructions
+
+### Hard gates
+
+Sequence matters. Do not apply fixes until each **pass condition** is satisfied (these steps are not “internal verification”).
+
+1. **Working tree** — `git status --porcelain` is empty **or** a stash was created with message `beagle-core: pre-fix-llm-artifacts backup` and `git stash list` shows it. If the user refuses stash/backup, **stop** or document explicit acceptance of risk in the report before edits.
+2. **Review artifact on disk** — `.beagle/llm-artifacts-review.json` exists, **or** `--all` completed a `review-llm-artifacts` run that wrote that file. Otherwise **stop** (no fixes from memory or guesses).
+3. **Stale review** — If `jq -r '.git_head' .beagle/llm-artifacts-review.json` ≠ `git rev-parse HEAD`, prompt to re-run review. **`y`** → re-run review, then continue. **`n`** → **abort** the fix pass (do not apply fixes against stale findings).
+4. **Verification overlay** — If `.beagle/llm-artifacts-verification.json` exists, it must **parse**; build exclude/inconclusive sets **before** partitioning (Section 4). On parse failure, **stop** and report the error.
+5. **Risky fixes** — No `code_removal`, `logic_change`, `mock_boundary`, `abstraction_change`, or `test_refactor` work without the interactive choice in Section 6 (or `s` to skip all remaining risky items).
+
+**Post-edit:** Sections 7–8 **pass** only when invoked tools exit successfully (non-zero = failure; keep JSON artifacts per Cleanup).
 
 ### 1. Parse Arguments
 
@@ -54,13 +66,22 @@ cat .beagle/llm-artifacts-review.json 2>/dev/null
 ```
 
 **If file missing:**
-- If `--all` flag: Run `review-llm-artifacts --all --json` first
+- If `--all` flag: Run `review-llm-artifacts --all` first to produce a full-project review
 - Otherwise: Fail with: "No review results found. Run `/beagle-core:review-llm-artifacts` first."
+
+**Optional verification overlay** — if `.beagle/llm-artifacts-verification.json` exists:
+- Build a set of finding ids with `status: false_positive` → **exclude** these from all fix lists.
+- Finding ids with `status: inconclusive` → **always** follow risky-fix handling (Section 6), even if `fix_safety` was `Safe` in the review.
+- Finding ids with `status: confirmed_issue` → use review JSON `fix_safety` / `risk` as usual.
+
+If verification is missing, warn when applying deletes or `dead-code` fixes: "For fewer false positives, run `/beagle-core:verify-llm-artifacts` first."
 
 **If file exists, validate freshness:**
 ```bash
-# Get stored git HEAD from JSON
-stored_head=$(jq -r '.git_head' .beagle/llm-artifacts-review.json)
+# Get stored git HEAD, scope, and target from JSON
+stored_head=$(jq -r '.git_head'   .beagle/llm-artifacts-review.json)
+stored_scope=$(jq -r '.scope // "all"'  .beagle/llm-artifacts-review.json)
+stored_target=$(jq -r '.target // "."'  .beagle/llm-artifacts-review.json)
 current_head=$(git rev-parse HEAD)
 
 if [ "$stored_head" != "$current_head" ]; then
@@ -68,11 +89,18 @@ if [ "$stored_head" != "$current_head" ]; then
 fi
 ```
 
-If stale, prompt: "Review results are stale. Re-run review? (y/n)"
+If stale, prompt: "Review results are stale. Re-run review? (y/n)".
+- **`y`** → **re-run `review-llm-artifacts` with the original scope and target** read from the stale JSON, then reload. This preserves the user's original intent; do **not** silently widen or narrow the scope, which would apply fixes unrelated to the user's diff (or miss files they cared about). Concretely:
+  - `scope == "changed"` → invoke `review-llm-artifacts "$stored_target"` (default scope is already changed-files).
+  - `scope == "all"`     → invoke `review-llm-artifacts --all "$stored_target"`.
+  - If `scope` or `target` is missing from the JSON (pre-schema review), **do not abort.** Assume `scope = "all"` and `target = "."`, then warn:
+    > "Review JSON predates the scope/target schema; re-running as a full-project scan (`--all`). If you meant a narrower scope (the default changed-files diff, or a subdirectory), cancel now and re-run `/beagle-core:review-llm-artifacts` explicitly."
+    Proceed only if the user does not cancel.
+- **`n`** → **abort** (do not apply fixes; stale findings are not trustworthy).
 
 ### 4. Partition Findings by Safety
 
-Parse findings from JSON and classify by `fix_safety` field:
+Parse findings from JSON and classify by `fix_safety` field (after applying verification overlay from step 3):
 
 **Safe Fixes** (auto-apply):
 - `unused_import` - Unused imports
@@ -216,10 +244,10 @@ git diff --stat
 
 On successful completion (all verifications pass):
 ```bash
-rm .beagle/llm-artifacts-review.json
+rm -f .beagle/llm-artifacts-review.json .beagle/llm-artifacts-verification.json
 ```
 
-If any verification fails, keep the file and report:
+If any verification fails, keep the files and report:
 ```
 Review file preserved at .beagle/llm-artifacts-review.json
 Fix issues and re-run, or restore with: git stash pop
